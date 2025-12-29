@@ -1,0 +1,8 @@
+opencv-python
+streamlit
+ultralytics
+deepface
+pandas
+numpy
+pillow
+python-dotenv
