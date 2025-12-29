@@ -6,3 +6,4 @@ pandas
 numpy
 pillow
 python-dotenv
+tf-keras
