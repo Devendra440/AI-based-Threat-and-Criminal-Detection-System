@@ -951,10 +951,22 @@ elif app_mode == "Live Surveillance":
         
         if st.session_state.system_running:
             try:
-                # Initialize camera
-                if st.session_state.camera is None:
+                # Initialize camera with robust logic
+                if st.session_state.camera is None or not st.session_state.camera.isOpened():
                     camera_source = camera_options[camera_choice]
-                    st.session_state.camera = cv2.VideoCapture(camera_source)
+                    
+                    # Try default opening
+                    cap = cv2.VideoCapture(camera_source)
+                    
+                    # If failed, try DSHOW (DirectShow) for Windows
+                    if not cap.isOpened() and os.name == 'nt' and camera_source == 0:
+                        cap = cv2.VideoCapture(camera_source, cv2.CAP_DSHOW)
+                    
+                    if not cap.isOpened():
+                         st.error("⚠️ Failed to open camera. Please check permissions or select a different source.")
+                         st.session_state.system_running = False
+                         
+                    st.session_state.camera = cap
                 
                 prev_time = time.time()
                 frame_count = 0

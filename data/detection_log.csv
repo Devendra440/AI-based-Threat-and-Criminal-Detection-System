@@ -46,3 +46,10 @@ Timestamp,Threat Type,Confidence,Image Path
 2025-12-29 23:27:57,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_232757.jpg
 2025-12-29 23:28:04,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_232804.jpg
 2025-12-29 23:28:12,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_232812.jpg
+2025-12-29 23:42:27,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_234227.jpg
+2025-12-29 23:42:34,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_234234.jpg
+2025-12-29 23:42:43,Weapon detected: SCISSORS,90.00%,data/evidence/THREAT_20251229_234243.jpg
+2025-12-29 23:42:54,Weapon detected: BASEBALL BAT,90.00%,data/evidence/THREAT_20251229_234254.jpg
+2025-12-29 23:43:08,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234308.jpg
+2025-12-29 23:43:13,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234313.jpg
+2025-12-29 23:43:19,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234319.jpg
