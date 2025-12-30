@@ -11,10 +11,16 @@ import base64
 import json
 from io import BytesIO
 import threading
+import random
+import hmac
+import hashlib
 try:
     import winsound
 except ImportError:
     winsound = None
+
+from dotenv import load_dotenv
+load_dotenv() # Load environment variables from .env
 
 # Import engine modules
 from engine.detector import ThreatDetector, FaceRecognizer
@@ -429,83 +435,241 @@ if 'current_threat' not in st.session_state:
     st.session_state.current_threat = None
 if 'alarm_sound' not in st.session_state:
     st.session_state.alarm_sound = None
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = None
+if 'signup_step' not in st.session_state:
+    st.session_state.signup_step = "form" # steps: form, verify
+if 'verification_otp' not in st.session_state:
+    st.session_state.verification_otp = None
+if 'otp_expiry' not in st.session_state:
+    st.session_state.otp_expiry = 0
+if 'pending_user' not in st.session_state:
+    st.session_state.pending_user = None
+if 'last_resend_time' not in st.session_state:
+    st.session_state.last_resend_time = 0
+if 'last_detections' not in st.session_state:
+    st.session_state.last_detections = []
+if 'last_identities' not in st.session_state:
+    st.session_state.last_identities = []
 
 # Initialize engines
 @st.cache_resource
-def init_engines(version="1.1.0"):
+def init_engines(version="1.2.3"):
     status_placeholder = st.empty()
     with status_placeholder.container():
         st.markdown('<div class="fade-in">', unsafe_allow_html=True)
         
-        # Animated header
+        # Streamlined header for speed
         header_html = """
-        <div style="text-align: center; margin: 2rem 0;">
-            <h1 style="font-size: 2.5rem; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+        <div style="text-align: center; margin: 1rem 0;">
+            <h2 style="font-size: 1.8rem; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
                        background-size: 200% auto;
                        -webkit-background-clip: text;
-                       -webkit-text-fill-color: transparent;
-                       animation: shimmer 3s linear infinite;">
-                🚀 Initializing AI-based Threat and Criminal Detection...
-            </h1>
+                       -webkit-text-fill-color: transparent;">
+                ⚡ Optimizing System Performance...
+            </h2>
         </div>
         """
         st.markdown(header_html, unsafe_allow_html=True)
         
         progress_bar = st.progress(0)
-        status_text = st.empty()
         
         # Step 1: Database
-        with st.spinner("📊 Loading Criminal Database..."):
-            progress_bar.progress(25)
-            try:
-                db = CriminalDatabase()
-                time.sleep(0.3)
-            except Exception as e:
-                st.error(f"Database Error: {e}")
-                return None
+        progress_bar.progress(25)
+        try:
+            db = CriminalDatabase()
+        except Exception as e:
+            st.error(f"Database Error: {e}")
+            return None
         
         # Step 2: Threat Detector
-        with st.spinner("🔫 Loading Weapon Detection Model..."):
-            progress_bar.progress(50)
-            try:
-                detector = ThreatDetector()
-                time.sleep(0.3)
-            except Exception as e:
-                st.warning(f"Using mock detection: {e}")
-                detector = None
+        progress_bar.progress(50)
+        try:
+            detector = ThreatDetector()
+        except Exception as e:
+            st.warning(f"Using mock detection: {e}")
+            detector = None
         
         # Step 3: Face Recognizer
-        with st.spinner("👤 Loading Face Recognition Engine..."):
-            progress_bar.progress(75)
-            try:
-                recognizer = FaceRecognizer()
-                time.sleep(0.3)
-            except Exception as e:
-                st.warning(f"Face recognition disabled: {e}")
-                recognizer = None
+        progress_bar.progress(75)
+        try:
+            recognizer = FaceRecognizer()
+        except Exception as e:
+            st.warning(f"Face recognition disabled: {e}")
+            recognizer = None
         
         # Step 4: Alert System
-        with st.spinner("📡 Configuring Alert System..."):
-            progress_bar.progress(100)
-            try:
-                alerts = AlertSystem()
-            except Exception as e:
-                st.warning(f"Alert system disabled: {e}")
-                alerts = None
+        progress_bar.progress(100)
+        try:
+            alerts = AlertSystem()
+        except Exception as e:
+            st.warning(f"Alert system disabled: {e}")
+            alerts = None
         
-        # Success animation
-        success_html = """
-        <div style="text-align: center; margin: 2rem 0;">
-            <div style="font-size: 4rem; animation: float 2s infinite ease-in-out;">✅</div>
-            <h2 style="color: #22c55e; margin: 1rem 0;">System Initialized Successfully!</h2>
-        </div>
-        """
-        st.markdown(success_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        time.sleep(1)
     
     status_placeholder.empty()
     return db, detector, recognizer, alerts
+
+# Initialize engines
+try:
+    db, detector, recognizer, alerts = init_engines(version="1.2.3")
+except:
+    st.error("Failed to initialize system engines. Please check the logs.")
+    st.stop()
+
+# Authentication helper
+def is_authenticated():
+    return st.session_state.authenticated
+
+def auth_page():
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        st.markdown("""
+        <div class='card fade-in' style='padding: 2rem;'>
+            <h2 style='text-align: center; margin-bottom: 2rem;'>🔐 Security Access</h2>
+        """, unsafe_allow_html=True)
+        
+        tab1, tab2 = st.tabs(["Login", "Sign Up"])
+        
+        with tab1:
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                st.markdown("<br>", unsafe_allow_html=True)
+                submit = st.form_submit_button("Login", use_container_width=True)
+                
+                if submit:
+                    user = db.authenticate_user(username, password)
+                    if user:
+                        st.session_state.authenticated = True
+                        st.session_state.current_user = user
+                        st.success("Login successful!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials")
+        
+        with tab2:
+            if st.session_state.signup_step == "form":
+                st.markdown("### New User Registration")
+                with st.form("signup_form"):
+                    new_user = st.text_input("Username", key="new_user")
+                    new_pass = st.text_input("Password", type="password", key="new_pass")
+                    confirm_pass = st.text_input("Confirm Password", type="password", key="confirm_pass")
+                    
+                    st.markdown("#### 📧 Alert Configuration")
+                    receiver_email = st.text_input("Receiver Email", placeholder="Who should receive alerts?", help="Enter the email address of the person to notify (e.g., security admin, guardian).")
+                    
+                    with st.expander("Advanced: Custom Sender (Optional)"):
+                        sender_email = st.text_input("Sender Email", placeholder="your.system@gmail.com")
+                        sender_pass = st.text_input("App Password", type="password", help="Gmail App Password required")
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.form_submit_button("Get Verification Code", use_container_width=True):
+                        if new_pass != confirm_pass:
+                            st.error("Passwords do not match")
+                        elif not new_user or not new_pass or not receiver_email:
+                            st.error("Username, Password and Receiver Email are required")
+                        elif db.user_exists(new_user):
+                            st.error("Username already taken")
+                        else:
+                            # Generate OTP
+                            otp = str(random.randint(100000, 999999))
+                            
+                            # Use internal sender or custom if provided
+                            with st.spinner("📤 Sending verification code..."):
+                                print(f"DEBUG: Calling verification email with alerts object: {alerts}")
+                                if alerts and hasattr(alerts, 'send_verification_email'):
+                                    success = alerts.send_verification_email(receiver_email, otp)
+                                else:
+                                    print("DEBUG: alerts object is missing the method or is None")
+                                    success = False
+                                if success:
+                                    st.session_state.verification_otp = otp
+                                    st.session_state.otp_expiry = time.time() + 300 # 5 minutes
+                                    st.session_state.last_resend_time = time.time()
+                                    st.session_state.signup_step = "verify"
+                                    st.session_state.pending_user = {
+                                        "username": new_user,
+                                        "password": new_pass,
+                                        "receiver_email": receiver_email,
+                                        "sender_email": sender_email if sender_email else None,
+                                        "sender_password": sender_pass if sender_pass else None
+                                    }
+                                    st.success(f"Verification code sent to {receiver_email}")
+                                    time.sleep(1)
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to send verification email. Please check your SMTP settings.")
+            
+            else: # verify step
+                st.markdown("### 📧 Email Verification")
+                st.info(f"A 6-digit verification code has been sent to **{st.session_state.pending_user['receiver_email']}**")
+                
+                with st.form("verify_form"):
+                    otp_input = st.text_input("Enter 6-digit Code", placeholder="000000")
+                    submit_otp = st.form_submit_button("Verify & Register", use_container_width=True)
+                    
+                    if submit_otp:
+                        current_time = time.time()
+                        if current_time > st.session_state.otp_expiry:
+                            st.error("Verification code expired. Please request a new one.")
+                        elif otp_input == st.session_state.verification_otp:
+                            # Registration successful!
+                            p = st.session_state.pending_user
+                            if db.register_user(p['username'], p['password'], p['receiver_email'], p['sender_email'], p['sender_password']):
+                                st.success("Account verified and created successfully!")
+                                st.session_state.signup_step = "form"
+                                st.session_state.pending_user = None
+                                st.session_state.verification_otp = None
+                                time.sleep(1.5)
+                                st.rerun()
+                            else:
+                                st.error("Error finalizing registration.")
+                        else:
+                            st.error("Invalid verification code.")
+                
+                # Resend Section
+                time_offset = st.session_state.otp_expiry - time.time()
+                time_left = int(time_offset) if time_offset > 0 else 0
+                
+                if time_left > 0:
+                    st.markdown(f"<p style='text-align: center; color: #94a3b8;'>Code valid for: <strong>{time_left}s</strong></p>", unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ Code has expired. Please resend.")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("⬅️ Back", help="Change your details", use_container_width=True):
+                        st.session_state.signup_step = "form"
+                        st.rerun()
+                with col2:
+                    # Allow resend only after 60 seconds
+                    resend_cooldown = 60
+                    time_since_last = time.time() - st.session_state.last_resend_time
+                    
+                    if time_since_last < resend_cooldown:
+                        st.button(f"🔄 Resend ({int(resend_cooldown - time_since_last)}s)", disabled=True, use_container_width=True)
+                    else:
+                        if st.button("🔄 Resend", help="Get a new code", use_container_width=True):
+                            with st.spinner("Resending..."):
+                                otp = str(random.randint(100000, 999999))
+                                success = alerts.send_verification_email(st.session_state.pending_user['receiver_email'], otp)
+                                if success:
+                                    st.session_state.verification_otp = otp
+                                    st.session_state.otp_expiry = time.time() + 300
+                                    st.session_state.last_resend_time = time.time()
+                                    st.success("New code sent!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to resend.")
+
+def logout():
+    st.session_state.authenticated = False
+    st.session_state.current_user = None
+    st.rerun()
 
 # Enhanced Header with animation
 st.markdown("""
@@ -548,9 +712,28 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Check Authentication
+if not is_authenticated():
+    auth_page()
+    st.stop()
+
 # Enhanced Sidebar
 with st.sidebar:
     st.markdown("### ⚙️ Control Panel")
+    
+    # User Info
+    if st.session_state.current_user:
+        st.info(f"👤 Logged in as: {st.session_state.current_user['username']}")
+        if st.button("Logout", use_container_width=True):
+            logout()
+    
+    if st.button("🔄 Reload Credentials", help="Force reload .env file", use_container_width=True):
+        from dotenv import load_dotenv
+        load_dotenv(override=True)
+        st.success("Credentials reloaded!")
+        st.rerun()
+    
+    st.markdown("---")
     
     # Mode selection
     app_mode = st.selectbox(
@@ -572,11 +755,54 @@ with st.sidebar:
     # Detection settings
     st.markdown("---")
     st.markdown("### 🔍 Detection Settings")
-    confidence_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.3, 0.05)
+    st.info("💡 Tip: For Gun/Pistol detection, add a custom YOLOv8 model file named 'weapon_detection.pt' to the 'models' folder.")
+    confidence_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25, 0.05)
     debug_mode = st.toggle("Show All Detections (Debug)", value=False)
+    
+    # Face detection mode
+    face_mode = st.radio("Face Detection Mode", 
+                         ["On Threat Only", "Continuous Scan"], 
+                         help="Continuous Scan is more secure but slower. On Threat Only is faster.",
+                         index=0)
+    
     auto_stop = st.checkbox("Auto-Stop on Threat", value=False)
     enable_sound = st.checkbox("Enable Sound Alerts", value=True)
     enable_email = st.checkbox("Enable Email Alerts", value=True)
+    
+    # Dynamic Email Receiver
+    if enable_email:
+        # Receiver is dynamic (User Input)
+        default_receiver = st.session_state.current_user.get('receiver_email') if st.session_state.current_user else os.getenv('RECEIVER_EMAIL', '')
+        
+        # Use session state to persist inputs across reruns
+        if 'alert_receiver' not in st.session_state:
+            st.session_state.alert_receiver = default_receiver
+        if 'alert_message' not in st.session_state:
+            st.session_state.alert_message = "URGENT WARNING: You are in a threat zone! Please evacuate immediately."
+            
+        st.session_state.alert_receiver = st.text_input("📩 Send Alerts To:", value=st.session_state.alert_receiver, help="Enter the email address to receive security alerts.")
+        st.session_state.alert_message = st.text_input("⚠️ Custom Alert Message:", value=st.session_state.alert_message, help="Message to include in the email.")
+        
+        # Sender Status INFO
+        sender_configured = os.getenv('SENDER_EMAIL') is not None
+        if sender_configured:
+            st.success(f"✔️ Active Sender: `{os.getenv('SENDER_EMAIL')}`")
+        else:
+            st.error("❌ SMTP Sender not configured in .env")
+            
+        alert_receiver = st.session_state.alert_receiver
+        alert_message = st.session_state.alert_message
+        
+        with st.expander("ℹ️ SMTP Help"):
+            st.markdown("""
+            **For Gmail Senders:**
+            1. Enable 2FA on your Google Account.
+            2. Generate an **App Password**.
+            3. Use the App Password in `.env` as `SENDER_PASSWORD`.
+            """)
+    else:
+        alert_receiver = None
+        alert_message = None
     
     # System status
     st.markdown("---")
@@ -648,36 +874,6 @@ with st.sidebar:
         </script>
         """, unsafe_allow_html=True)
         st.rerun()
-
-# Initialize engines
-try:
-    db, detector, recognizer, alerts = init_engines(version="1.1.0")
-except:
-    st.error("Failed to initialize system engines. Please check the logs.")
-    st.stop()
-
-# Authentication helper
-def is_authenticated():
-    return st.session_state.authenticated
-
-def login_form():
-    with st.sidebar:
-        st.markdown("### 🔐 Authentication Required")
-        user = st.text_input("Username")
-        pwd = st.text_input("Password", type="password")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Login", use_container_width=True):
-                if user == "admin" and pwd == "admin@deva":
-                    st.session_state.authenticated = True
-                    st.success("Access Granted")
-                    st.rerun()
-                else:
-                    st.error("Invalid credentials")
-        with col2:
-            if st.button("Reset", type="secondary", use_container_width=True):
-                st.rerun()
 
 # Alarm sound functions - FIXED VERSION
 def play_weapon_detected_alarm():
@@ -900,15 +1096,26 @@ if app_mode == "Dashboard":
     with col4:
         if st.button("📧 Test Email", use_container_width=True):
             if alerts:
+                # Prepare email config from current user and dynamic input
+                # Prepare email config - Sender is FIXED (None here uses env vars in AlertSystem)
+                email_config = {
+                    'sender_email': None,
+                    'sender_password': None,
+                    'receiver_email': alert_receiver,
+                    'smtp_server': None, # Defaults to Gmail in class
+                    'smtp_port': None
+                }
+                
                 test_result = alerts.send_email_alert({
                     'type': 'TEST ALERT - System Check',
                     'confidence': 0.95,
-                    'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }, None)
+                    'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'message': alert_message # Pass custom message
+                }, None, email_config)
                 if test_result:
                     st.toast("📧 Test email sent successfully!", icon="✅")
                 else:
-                    st.toast("❌ Failed to send test email", icon="⚠️")
+                    st.toast("❌ Failed. Check if 'Send Alerts To' is a valid email and check terminal for logs.", icon="⚠️")
 
 elif app_mode == "Live Surveillance":
     col1, col2 = st.columns([2, 1])
@@ -984,13 +1191,19 @@ elif app_mode == "Live Surveillance":
                     # Create a copy for display
                     display_frame = frame.copy()
                     
-                    # Detect weapons
+                    frame_count += 1
+                    
+                    # 1. Weapon Detection (Every 2 frames to boost speed)
                     detections = []
-                    if detector:
-                        detections = detector.detect_weapons(frame, return_all=debug_mode)
+                    if detector and frame_count % 2 == 0:
+                        detections = detector.detect_weapons(frame, conf=confidence_threshold, return_all=debug_mode)
+                        st.session_state.last_detections = detections
+                    elif 'last_detections' in st.session_state:
+                        detections = st.session_state.last_detections
                     
                     weapon_present = False
                     current_threats = []
+                    current_suspect = "Suspicious Individual"
                     
                     # Process detections
                     for d in detections:
@@ -1006,42 +1219,58 @@ elif app_mode == "Live Surveillance":
                                 current_weapon = label
                                 current_threats.append(label)
                                 
-                                # Draw detection box with enhanced styling
+                                # Draw detection box
                                 cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 0, 255), 4)
                                 cv2.putText(display_frame, f"🚨 {label.upper()} ({conf:.1%})", 
                                            (x1, y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-                                
-                                # Add flashing effect for urgent threats
-                                current_time = time.time()
-                                if int(current_time * 3) % 2 == 0:  # Faster flash
-                                    cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 255), 2)
                             elif debug_mode:
-                                # Show non-threat detections in green for info if debug is on
-                                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                cv2.putText(display_frame, f"INFO: {label} ({conf:.1%})", 
+                                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
+                                cv2.putText(display_frame, f"{label} ({conf:.1%})", 
                                            (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
                     
-                    # Face Recognition - Only when weapon detected
-                    if recognizer and weapon_present:
+                    # 2. Face Recognition (Based on mode)
+                    should_detect_faces = (face_mode == "Continuous Scan" and frame_count % 5 == 0) or \
+                                         (face_mode == "On Threat Only" and weapon_present and frame_count % 2 == 0)
+                    
+                    if recognizer and should_detect_faces:
                         faces = recognizer.detect_faces(frame)
+                        current_identities = []
                         
                         for f in faces:
                             region = f['facial_area']
                             fx, fy, fw, fh = region['x'], region['y'], region['w'], region['h']
+                            h, w = frame.shape[:2]
+                            fx, fy = max(0, fx), max(0, fy)
+                            fx2, fy2 = min(w, fx+fw), min(h, fy+fh)
                             
-                            # Identify face
-                            identity = recognizer.identify_face(frame)
-                            name = identity['name'].upper() if identity else "UNKNOWN"
-                            confidence = identity['confidence'] if identity else 0.0
+                            if fx2 > fx and fy2 > fy:
+                                face_crop = frame[fy:fy2, fx:fx2]
+                                identity = recognizer.identify_face(face_crop)
+                                name = identity['name'].upper() if identity else "UNKNOWN"
+                                confidence = identity['confidence'] if identity else 0.0
+                                
+                                current_identities.append({
+                                    'name': name, 'conf': confidence,
+                                    'bbox': [fx, fy, fx2, fy2]
+                                })
+                                
+                                if name != "UNKNOWN":
+                                    current_suspect = f"Known Criminal: {name}"
+                                    # Immediate visual feedback for known threat
+                                    # cv2.rectangle(display_frame, (fx, fy), (fx2, fy2), (255, 0, 0), 3)
+                        
+                        st.session_state.last_identities = current_identities
+                    
+                    # Draw identities from state
+                    if 'last_identities' in st.session_state:
+                        for i in st.session_state.last_identities:
+                            name, confidence, [fx, fy, fx2, fy2] = i['name'], i['conf'], i['bbox']
+                            box_color = (0, 255, 255) if name == "UNKNOWN" else (255, 0, 0)
+                            cv2.rectangle(display_frame, (fx, fy), (fx2, fy2), box_color, 2)
                             
-                            # Draw face detection
-                            face_color = (0, 255, 255) if name == "UNKNOWN" else (255, 0, 0)
-                            cv2.rectangle(display_frame, (fx, fy), (fx+fw, fy+fh), face_color, 2)
-                            
-                            # Add label with confidence
-                            label_text = f"{name} ({confidence:.1%})" if confidence > 0 else name
-                            cv2.rectangle(display_frame, (fx, fy-30), (fx+200, fy), face_color, -1)
-                            cv2.putText(display_frame, label_text, (fx+5, fy-10), 
+                            label_t = f"{name} ({confidence:.1%})" if confidence > 0 else name
+                            cv2.rectangle(display_frame, (fx, fy-30), (fx+len(label_t)*12, fy), box_color, -1)
+                            cv2.putText(display_frame, label_t, (fx+5, fy-10), 
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                     
                     if weapon_present and enable_sound:
@@ -1087,17 +1316,26 @@ elif app_mode == "Live Surveillance":
                             cv2.imwrite(img_path, frame)
                             
                             # Log to database
-                            summary = f"Weapon detected: {current_weapon}"
+                            summary = f"Weapon: {current_weapon} | Suspect: {current_suspect}"
                             db.log_alert(summary, 0.9, img_path)
                             
                             # Send email alert if enabled
-                            if enable_email and alerts:
+                            if enable_email and alerts and alert_receiver:
+                                email_config = {
+                                    'sender_email': None,
+                                    'sender_password': None,
+                                    'receiver_email': alert_receiver,
+                                    'smtp_server': None,
+                                    'smtp_port': None
+                                }
+                                
                                 alerts.send_email_alert({
                                     'type': f'WEAPON DETECTED: {current_weapon}',
                                     'confidence': 0.9,
                                     'time': timestamp,
-                                    'suspect': 'Unknown'
-                                }, img_path)
+                                    'suspect': current_suspect,
+                                    'message': alert_message # Pass custom message
+                                }, img_path, email_config)
                             
                             if auto_stop:
                                 st.session_state.system_running = False

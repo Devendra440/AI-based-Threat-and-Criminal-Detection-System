@@ -6,3 +6,4 @@ data/evidence/
 data/criminals/
 data/detection_log.csv
 data/*.db
+models/

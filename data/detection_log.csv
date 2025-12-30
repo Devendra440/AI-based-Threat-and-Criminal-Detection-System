@@ -53,3 +53,30 @@ Timestamp,Threat Type,Confidence,Image Path
 2025-12-29 23:43:08,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234308.jpg
 2025-12-29 23:43:13,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234313.jpg
 2025-12-29 23:43:19,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251229_234319.jpg
+2025-12-30 14:16:38,Weapon detected: REMOTE,90.00%,data/evidence/THREAT_20251230_141638.jpg
+2025-12-30 14:16:48,Weapon detected: SCISSORS,90.00%,data/evidence/THREAT_20251230_141648.jpg
+2025-12-30 14:17:24,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141724.jpg
+2025-12-30 14:17:36,Weapon detected: KNIFE,90.00%,data/evidence/THREAT_20251230_141736.jpg
+2025-12-30 14:17:53,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141753.jpg
+2025-12-30 14:18:00,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141800.jpg
+2025-12-30 14:18:06,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141806.jpg
+2025-12-30 14:18:11,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141811.jpg
+2025-12-30 14:18:16,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141816.jpg
+2025-12-30 14:19:13,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141913.jpg
+2025-12-30 14:19:19,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141919.jpg
+2025-12-30 14:19:41,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141941.jpg
+2025-12-30 14:19:47,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_141947.jpg
+2025-12-30 15:00:46,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_150046.jpg
+2025-12-30 15:00:52,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_150052.jpg
+2025-12-30 15:01:04,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_150104.jpg
+2025-12-30 15:08:32,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_150832.jpg
+2025-12-30 15:08:38,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_150838.jpg
+2025-12-30 15:10:43,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_151043.jpg
+2025-12-30 15:13:22,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_151322.jpg
+2025-12-30 15:13:28,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_151328.jpg
+2025-12-30 15:13:34,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_151334.jpg
+2025-12-30 15:13:40,Weapon detected: CELL PHONE,90.00%,data/evidence/THREAT_20251230_151340.jpg
+2025-12-30 22:44:35,Weapon: KNIFE | Suspect: Suspicious Individual,90.00%,data/evidence/THREAT_20251230_224435.jpg
+2025-12-30 22:47:54,Weapon: BOTTLE | Suspect: Suspicious Individual,90.00%,data/evidence/THREAT_20251230_224754.jpg
+2025-12-30 22:58:55,Weapon: BOTTLE | Suspect: Suspicious Individual,90.00%,data/evidence/THREAT_20251230_225855.jpg
+2025-12-30 23:01:11,Weapon: SCISSORS | Suspect: Suspicious Individual,90.00%,data/evidence/THREAT_20251230_230111.jpg
